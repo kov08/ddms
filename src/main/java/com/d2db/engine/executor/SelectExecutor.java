@@ -7,6 +7,7 @@ import com.d2db.engine.parser.QueryExecutor;
 import com.d2db.model.Table;
 import com.d2db.storage.CustomFileReader;
 import com.d2db.storage.LocalMetadataManager;
+import com.d2db.transaction.TransactionManager;
 
 public class SelectExecutor implements QueryExecutor {
 
@@ -31,8 +32,9 @@ public class SelectExecutor implements QueryExecutor {
             throw new Exception("Error table: '" + tableName + "'does not exist.");
         }
 
-        CustomFileReader reader = new CustomFileReader(dbName);
-        Table table = reader.loadTable(tableName);
+        // TransactionManager to get table context
+        TransactionManager tmanager = TransactionManager.getInstance();
+        Table table = tmanager.getTableContext(dbName, tableName);
 
         int filterColumnIndex = 0; // placeholder
 

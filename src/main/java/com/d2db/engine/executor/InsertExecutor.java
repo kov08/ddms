@@ -30,11 +30,7 @@ public class InsertExecutor implements QueryExecutor {
             throw new Exception("Error: Table '" + tableName + "' does't exist");
         }
 
-        // Without transaction manager reader is used to get tablecontext
-        // CustomFileReader reader = new CustomFileReader(dbName);
-        
         // load existing data
-        // Table table = reader.loadTable(tableName);
         TransactionManager tManager = TransactionManager.getInstance();
         
         // Get the table context
@@ -42,9 +38,8 @@ public class InsertExecutor implements QueryExecutor {
         
         // Modify in-memory structure
         table.insertRow(values);
-        
-        
-        // persist  immediately to disk
+                
+        // persist immediately only if it is a standalone query 
         if (!tManager.isActive()) {
             CustomFileWriter writer = new CustomFileWriter(dbName);
             writer.writeTable(table);
