@@ -1,7 +1,10 @@
 package com.d2db.transaction;
 
+import java.io.EOFException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.d2db.model.Table;
 import com.d2db.storage.CustomFileReader;
@@ -13,6 +16,7 @@ public class TransactionManager {
     private Map<String, Table> inMemoryWorkspace;
     private long transactionStartTime;
     private static final long TIMEOUT_MS = 60000; //60 seconds
+    private final ReentrantLock rLock = new ReentrantLock(true);
 
     private TransactionManager() {
         isTrasactionActive = true;
@@ -46,18 +50,28 @@ public class TransactionManager {
     }
     
     // Begin Transaction
-    public synchronized void begintransaction() throws Exception {
-        if (isTrasactionActive) {
-            throw new Exception("A transaction is already in progress. Single distributed transaction limit reached.");
+    public void begintransaction() throws Exception {
+        if (!rLock.tryLock(3,TimeUnit.MILLISECONDS)) {
+            throw new Exception("Database is currently locked by another user.");
         }
-
-        this.isTrasactionActive = true;
-        this.inMemoryWorkspace.clear();
-        this.transactionStartTime = System.currentTimeMillis();
-        // Pre-logging Step
-        System.out.println("[EVENT LOG] <StartTransaction> ID: " + transactionStartTime);
+        try {
+            
+            if (isTrasactionActive) {
+                throw new Exception("A transaction is already in progress. Single distributed transaction limit reached.");
+            }
+            
+            this.isTrasactionActive = true;
+            this.inMemoryWorkspace.clear();
+            this.transactionStartTime = System.currentTimeMillis();
+            // Pre-logging Step
+            System.out.println("[EVENT LOG] <StartTransaction> ID: " + transactionStartTime);
+        
+        } catch (Exception e) {
+            rLock.unlock();
+            throw e;
+        }
     }
-
+        
     public Table getTableContext(String dbName, String tableName) throws Exception {
 
         if (isTrasactionActive && inMemoryWorkspace.containsKey(tableName)) {
@@ -73,23 +87,30 @@ public class TransactionManager {
     }
     
     // Commit datastructure to persistant storage
-    public synchronized void commitTransaction(String dbName) throws Exception {
-        if (!isTrasactionActive) {
-            throw new Exception("No active transaction to commit.");
-        }
-
-        System.out.println("[EVENT LOG] <StartCommit> ID: " + transactionStartTime);
-        CustomFileWriter writer = new CustomFileWriter(dbName);
-
-        // Write/update all tables to storage from inmemory
-        for (Table table : inMemoryWorkspace.values()) {
+    public void commitTransaction(String dbName) throws Exception {
+        try {
+            
+            
+            if (!isTrasactionActive) {
+                throw new Exception("No active transaction to commit.");
+            }
+            
+            System.out.println("[EVENT LOG] <StartCommit> ID: " + transactionStartTime);
+            CustomFileWriter writer = new CustomFileWriter(dbName);
+            
+            // Write/update all tables to storage from inmemory
+            for (Table table : inMemoryWorkspace.values()) {
             writer.writeTable(table);
-        }
+            }
 
-        System.out.println("[EVENT LOG] <EndCommit> ID: " + transactionStartTime);
-        this.isTrasactionActive = false;
-        this.inMemoryWorkspace.clear();
-        System.out.println("TRANSACTION COMMITED SUCCESSFULLY.");
+            System.out.println("[EVENT LOG] <EndCommit> ID: " + transactionStartTime);
+            this.isTrasactionActive = false;
+            this.inMemoryWorkspace.clear();
+            System.out.println("TRANSACTION COMMITED SUCCESSFULLY.");
+        } catch (Exception e) {
+            this.isTrasactionActive = false;
+            rLock.unlock();
+        }
     }
     
     // Rollback
