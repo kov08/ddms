@@ -1,11 +1,13 @@
 package com.d2db.transaction;
 
-import java.io.EOFException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.d2db.engine.VMID;
+import com.d2db.logging.EventLogger;
+import com.d2db.logging.GeneralLogger;
 import com.d2db.model.Table;
 import com.d2db.storage.CustomFileReader;
 import com.d2db.storage.CustomFileWriter;
@@ -63,9 +65,11 @@ public class TransactionManager {
             this.isTrasactionActive = true;
             this.inMemoryWorkspace.clear();
             this.transactionStartTime = System.currentTimeMillis();
+            
             // Pre-logging Step
+            EventLogger.getInstance().logEvent("Strart Transaction", "Transaction Initiated", VMID.resolveMachineIdentity());
             System.out.println("[EVENT LOG] <StartTransaction> ID: " + transactionStartTime);
-        
+            
         } catch (Exception e) {
             rLock.unlock();
             throw e;
@@ -88,22 +92,26 @@ public class TransactionManager {
     
     // Commit datastructure to persistant storage
     public void commitTransaction(String dbName) throws Exception {
-        try {
-            
+        try { 
             
             if (!isTrasactionActive) {
                 throw new Exception("No active transaction to commit.");
             }
-            
+
+            EventLogger.getInstance().logEvent("StartCommit", "Writing tables to disk", VMID.resolveMachineIdentity());
             System.out.println("[EVENT LOG] <StartCommit> ID: " + transactionStartTime);
+
             CustomFileWriter writer = new CustomFileWriter(dbName);
             
             // Write/update all tables to storage from inmemory
             for (Table table : inMemoryWorkspace.values()) {
-            writer.writeTable(table);
+                writer.writeTable(table);
             }
 
+            EventLogger.getInstance().logEvent("EndCommit", "Transaction Successful", VMID.resolveMachineIdentity());
             System.out.println("[EVENT LOG] <EndCommit> ID: " + transactionStartTime);
+            GeneralLogger.getInstance().logDatabaseState(dbName, VMID.resolveMachineIdentity());
+
             this.isTrasactionActive = false;
             this.inMemoryWorkspace.clear();
             System.out.println("TRANSACTION COMMITED SUCCESSFULLY.");
@@ -118,7 +126,8 @@ public class TransactionManager {
         if (!isTrasactionActive) {
             throw new Exception("No active transaction to rollback.");
         }
-
+        
+        EventLogger.getInstance().logEvent("RollbackTransaction", "Transaction rolled back", VMID.resolveMachineIdentity());    
         System.out.println("[EVENT LOG] <Rollback> ID: " + transactionStartTime);
         this.inMemoryWorkspace.clear();
         this.isTrasactionActive = false;

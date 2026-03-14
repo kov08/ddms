@@ -10,9 +10,11 @@ import com.d2db.engine.executor.SelectExecutor;
 public class SQLParser {
     private final List<Token> tokens;
     private int currentPosition;
+    private final String currentDbName;
 
     // Constructor
-    public SQLParser(List<Token> tokens) {
+    public SQLParser(String currentDbName, List<Token> tokens) {
+        this.currentDbName = currentDbName;
         this.tokens = tokens;
         this.currentPosition = 0;
     }
@@ -68,15 +70,15 @@ public class SQLParser {
 
             Token valueToken = advance();
             if (valueToken.getTokenType() == TokenType.STRING_LITERAL || valueToken.getTokenType() == TokenType.NUMBER) {
-                whereColumn = valueToken.getvalue();
+                whereValue = valueToken.getvalue();
             } else {
-                throw new Exception("Syntex Error: Unexpected literal or number after '='")
+                throw new Exception("Syntex Error: Unexpected literal or number after '='");
             }
         }
 
         match(";");
 
-        return new SelectExecutor(tableName, columns, whereColumn, whereValue);
+        return new SelectExecutor(currentDbName, tableName, columns, whereColumn, whereValue);
     }
 
     

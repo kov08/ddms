@@ -1,13 +1,10 @@
 package com.d2db.storage;
 
 import java.net.InetAddress;
-import java.rmi.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.xml.transform.stax.StAXResult;
-
-import com.d2db.model.Table;
+import com.d2db.engine.VMID;
 
 public class GlobalMetadataManager {
     public static GlobalMetadataManager instance;
@@ -17,7 +14,7 @@ public class GlobalMetadataManager {
 
     private GlobalMetadataManager() {
         globalSchema = new ConcurrentHashMap<>();
-        this.currentVmId = resolveMachineIdentity();
+        this.currentVmId = VMID.resolveMachineIdentity();
     }
     
     public static synchronized GlobalMetadataManager getInstance() {
@@ -26,15 +23,6 @@ public class GlobalMetadataManager {
         }
         return instance;
     }
-
-    private String resolveMachineIdentity() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (java.net.UnknownHostException e) {
-            return "UNKNOWN_VM_" + System.currentTimeMillis();
-        }
-    }
-
     
     public void registerGlobalTable(String tableName) {
         globalSchema.put(tableName, this.currentVmId);

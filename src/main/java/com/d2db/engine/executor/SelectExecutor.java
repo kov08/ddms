@@ -3,9 +3,11 @@ package com.d2db.engine.executor;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.d2db.engine.VMID;
 import com.d2db.engine.parser.QueryExecutor;
+import com.d2db.logging.EventLogger;
+import com.d2db.logging.GeneralLogger;
 import com.d2db.model.Table;
-import com.d2db.storage.CustomFileReader;
 import com.d2db.storage.LocalMetadataManager;
 import com.d2db.transaction.TransactionManager;
 
@@ -27,11 +29,12 @@ public class SelectExecutor implements QueryExecutor {
     
     @Override
     public void execute() throws Exception {
+        long startTime = System.currentTimeMillis();
         LocalMetadataManager meta = LocalMetadataManager.getInstacne();
         if (!meta.hasLocalTable(tableName)) {
             throw new Exception("Error table: '" + tableName + "'does not exist.");
         }
-
+        EventLogger.getInstance().logEvent("Data fetching: ","Started", VMID.resolveMachineIdentity());
         // TransactionManager to get table context
         TransactionManager tmanager = TransactionManager.getInstance();
         Table table = tmanager.getTableContext(dbName, tableName);
@@ -55,11 +58,13 @@ public class SelectExecutor implements QueryExecutor {
             }
 
         }
-
+        long duration = System.currentTimeMillis() - startTime;
+        EventLogger.getInstance().logEvent("Data fetching", "Ended", VMID.resolveMachineIdentity());
         System.out.println("---Results for " + tableName + "---");
         for (List<String> resultRow : results) {
             System.out.println(String.join(" | ", resultRow));
         }
+        GeneralLogger.getInstance().logExecutionTime("Data Fetching", duration, VMID.resolveMachineIdentity());
     }
     
     

@@ -1,5 +1,7 @@
 package com.d2db.storage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,4 +34,11 @@ public class LocalMetadataManager {
         return localTables.containsKey(tableName);
     }
 
+    public List<String> getAllTableNames() {
+        List<String> allTableNames = new ArrayList<>();
+        for (String tableName : localTables.keySet()) {
+            allTableNames.add(tableName);
+        }
+        return allTableNames;
+    }
 }
