@@ -81,7 +81,6 @@ public class SQLParser {
         return new SelectExecutor(currentDbName, tableName, columns, whereColumn, whereValue);
     }
 
-    
     // Check the current token
     private Token peek() {
         if (currentPosition < tokens.size()) {
