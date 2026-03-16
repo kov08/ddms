@@ -3,6 +3,7 @@ package com.d2db.engine.executor;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.d2db.engine.ExecutionContext;
 import com.d2db.engine.VMID;
 import com.d2db.engine.parser.QueryExecutor;
 import com.d2db.logging.EventLogger;
@@ -13,14 +14,12 @@ import com.d2db.transaction.TransactionManager;
 
 public class SelectExecutor implements QueryExecutor {
 
-    private final String dbName;
     private final String tableName;
     private final List<String> selectColumns;
     private final String whereColumn;
     private final String whereValue;
     
-    public SelectExecutor(String dbName, String tableName,List<String> selectColumns, String whereColumn, String whereValue) {
-        this.dbName = dbName;
+    public SelectExecutor(String tableName,List<String> selectColumns, String whereColumn, String whereValue) {
         this.tableName = tableName;
         this.selectColumns = selectColumns;
         this.whereColumn = whereColumn;
@@ -28,14 +27,20 @@ public class SelectExecutor implements QueryExecutor {
     }
     
     @Override
-    public void execute() throws Exception {
+    public void execute(boolean isReplicaSync) throws Exception {
         long startTime = System.currentTimeMillis();
         LocalMetadataManager meta = LocalMetadataManager.getInstacne();
         if (!meta.hasLocalTable(tableName)) {
             throw new Exception("Error table: '" + tableName + "'does not exist.");
         }
-        EventLogger.getInstance().logEvent("Data fetching: ","Started", VMID.resolveMachineIdentity());
+        EventLogger.getInstance().logEvent("Data fetching: ", "Started", VMID.resolveMachineIdentity());
+        
         // TransactionManager to get table context
+        String dbName = ExecutionContext.getCurrentDatabase();
+        if (dbName == null) {
+            throw new Exception("No database selected. Use 'USE <database_name>;' first.");
+        }
+
         TransactionManager tmanager = TransactionManager.getInstance();
         Table table = tmanager.getTableContext(dbName, tableName);
 
@@ -58,6 +63,7 @@ public class SelectExecutor implements QueryExecutor {
             }
 
         }
+        
         long duration = System.currentTimeMillis() - startTime;
         EventLogger.getInstance().logEvent("Data fetching", "Ended", VMID.resolveMachineIdentity());
         System.out.println("---Results for " + tableName + "---");

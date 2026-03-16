@@ -3,6 +3,7 @@ package com.d2db.network;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import com.d2db.engine.ExecutionContext;
 import com.d2db.engine.VMID;
 import com.d2db.logging.EventLogger;
 
@@ -11,8 +12,11 @@ public class VMSyncClient {
         
         try (Socket socket = new Socket(targetIp, targetPort);
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-               
-            String payload = "REPLICA_SYNC|" + sqlCommand;
+            
+            String dbName = ExecutionContext.getCurrentDatabase();
+            String userId = ExecutionContext.getCurrentUserId();
+                    
+            String payload = String.format("REPLICA_SYNC| %s | %s | %s ", dbName, userId, sqlCommand);
             out.println(payload);
             
             // Event logging

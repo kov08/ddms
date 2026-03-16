@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.d2db.engine.ExecutionContext;
 import com.d2db.engine.Tokenizer;
 import com.d2db.engine.VMID;
 import com.d2db.engine.parser.QueryExecutor;
@@ -49,27 +50,36 @@ public class VMSyncServer implements Runnable {
             byte[] buffer = new byte[MAX_BUFFER_Size];
             int bytesRead = in.read(buffer);
             if (bytesRead > 0) {
+                
                 String incomingPayLoad = new String(buffer, 0, bytesRead).trim();
+                String[] parts = incomingPayLoad.split("\\|", 4);
+                
+                if (parts.length == 4) {
+                    String dbName = parts[1];
+                    String useId = parts[2];
+                    String sqlCommand = parts[3];
 
-                System.out.println("[NETWORK] Received sync command(payLoad): " + incomingPayLoad);
-                EventLogger.getInstance().logEvent("Connection packet reading", incomingPayLoad,
-                        VMID.resolveMachineIdentity());
-
-                if (incomingPayLoad.startsWith("REPLICA SYNC|")) {
-                    String sqlCommand = incomingPayLoad.substring(13);
-
+                    ExecutionContext.setCurretnDatabases(dbName);
+                    ExecutionContext.setCurrentUserId(useId);
+                    
                     Tokenizer tokenizer = new Tokenizer(sqlCommand);
-                    QueryExecutor executor = new SQLParser("NetworkDB", tokenizer.tokenize()).parse();
+                    QueryExecutor executor = new SQLParser(tokenizer.tokenize()).parse();
                     
                     // Pass true to prevent loop effect
                     executor.execute(true);
                 }
+
+                System.out.println("[NETWORK] Received sync command(payLoad): " + incomingPayLoad);
+                EventLogger.getInstance().logEvent("Connection packet reading", incomingPayLoad,
+                        VMID.resolveMachineIdentity());
                 
             }
-            // Route to parse and Executor
         } 
         catch (Exception e) {
-               System.err.println("Failed to process incoming sync: " + e.getMessage());
+            System.err.println("Failed to process incoming sync: " + e.getMessage());
+        }
+        finally {
+                ExecutionContext.clear();
             }
     }
     

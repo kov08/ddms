@@ -10,11 +10,9 @@ import com.d2db.engine.executor.SelectExecutor;
 public class SQLParser {
     private final List<Token> tokens;
     private int currentPosition;
-    private final String currentDbName;
 
     // Constructor
-    public SQLParser(String currentDbName, List<Token> tokens) {
-        this.currentDbName = currentDbName;
+    public SQLParser(List<Token> tokens) {
         this.tokens = tokens;
         this.currentPosition = 0;
     }
@@ -78,7 +76,7 @@ public class SQLParser {
 
         match(";");
 
-        return new SelectExecutor(currentDbName, tableName, columns, whereColumn, whereValue);
+        return new SelectExecutor(tableName, columns, whereColumn, whereValue);
     }
 
     // Check the current token

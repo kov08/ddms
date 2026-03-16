@@ -2,6 +2,7 @@ package com.d2db.engine.executor;
 
 import java.util.List;
 
+import com.d2db.engine.ExecutionContext;
 import com.d2db.engine.VMID;
 import com.d2db.engine.parser.QueryExecutor;
 import com.d2db.logging.EventLogger;
@@ -14,12 +15,10 @@ import com.d2db.transaction.TransactionManager;
 
 public class InsertExecutor implements QueryExecutor {
 
-    private final String dbName;
     private final String tableName;
     private final List<String> values;
     
     public InsertExecutor(String dbName, String tableName, List<String> values) {
-        this.dbName = dbName;
         this.tableName = tableName;
         this.values = values;
     }
@@ -27,6 +26,11 @@ public class InsertExecutor implements QueryExecutor {
     @Override
     public void execute(boolean isReplicaSync) throws Exception {
         long startTime = System.currentTimeMillis();
+        String dbName = ExecutionContext.getCurrentDatabase();
+        if (dbName == null) {
+            throw new Exception("No database selected. Use 'USE <database_name>;' first.");
+        }
+        
         LocalMetadataManager meta = LocalMetadataManager.getInstacne();
         if (!meta.hasLocalTable(tableName)) {
             throw new Exception("Error: Table '" + tableName + "' does't exist");
