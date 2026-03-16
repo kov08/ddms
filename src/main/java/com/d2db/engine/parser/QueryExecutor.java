@@ -1,5 +1,5 @@
 package com.d2db.engine.parser;
 
 public interface QueryExecutor {
-    void execute() throws Exception;
+    void execute(boolean isReplicaSync) throws Exception;
 }

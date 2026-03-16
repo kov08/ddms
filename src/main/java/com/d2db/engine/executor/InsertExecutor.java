@@ -7,6 +7,7 @@ import com.d2db.engine.parser.QueryExecutor;
 import com.d2db.logging.EventLogger;
 import com.d2db.logging.GeneralLogger;
 import com.d2db.model.Table;
+import com.d2db.network.VMSyncClient;
 import com.d2db.storage.CustomFileWriter;
 import com.d2db.storage.LocalMetadataManager;
 import com.d2db.transaction.TransactionManager;
@@ -24,7 +25,7 @@ public class InsertExecutor implements QueryExecutor {
     }
     
     @Override
-    public void execute() throws Exception {
+    public void execute(boolean isReplicaSync) throws Exception {
         long startTime = System.currentTimeMillis();
         LocalMetadataManager meta = LocalMetadataManager.getInstacne();
         if (!meta.hasLocalTable(tableName)) {
@@ -47,6 +48,12 @@ public class InsertExecutor implements QueryExecutor {
         if (!tManager.isActive()) {
             CustomFileWriter writer = new CustomFileWriter(dbName);
             writer.writeTable(table);
+            
+            // Network Broadcast (Prevent infinite loop)
+            if (!isReplicaSync) {
+                String rawQuery = "INSERT INTO " + tableName;
+                VMSyncClient.broadcastCommit("VM2_IP_ADDRESS", 9090, rawQuery);
+            }
         }
         
         long duration = System.currentTimeMillis() - startTime;
