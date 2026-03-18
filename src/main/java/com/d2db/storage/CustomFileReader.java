@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.d2db.model.Table;
 
@@ -23,16 +25,23 @@ public class CustomFileReader {
             return new Table(tableName);
         }
 
-        Table table = new Table(tableName);
-
+        // Snapshot in memory
+        List<String> lines = new ArrayList<>();
+        
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] rowData = line.split(DELIMITER);
-                table.insertRow(Arrays.asList(rowData));
+                lines.add(line); // snap stored
             }
-
         }
+
+        Table table = new Table(tableName);
+        
+        for (String line : lines) {
+            String[] rowData = line.split(DELIMITER);
+            table.insertRow(Arrays.asList(rowData));
+        }
+        
         return table;
     }
 }

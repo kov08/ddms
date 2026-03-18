@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.d2db.model.Table;
+// import com.d2db.model.Table;
 // import com.d2db.model.TrieNode;
 
 public class LocalMetadataManager {

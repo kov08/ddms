@@ -38,4 +38,8 @@ public class Table {
     public String getTableName() {
         return tableName;
     }
+
+    public List<ColumnMetadata> getSchema() {
+        return schema;
+    }
 }
