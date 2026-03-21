@@ -20,6 +20,9 @@ public class ColumnMetadata{
     
     public void setPrimaryKey(boolean isPrimaryKey) {
         this.isPrimaryKey = isPrimaryKey;
+        if (isPrimaryKey) {
+            this.isUnique = isPrimaryKey;
+        }
     }
 
     public void setForeignKey(String referenceTable, String referenceColumn) {

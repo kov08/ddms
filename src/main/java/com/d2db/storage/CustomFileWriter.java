@@ -4,12 +4,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.d2db.model.Table;
 
 public class CustomFileWriter {
-    private static final String DELIMITER= "|*|";
+    private static final String DELIMITER= "\\|#\\|";
     private static final String ROW_SEPARATOR = System.lineSeparator();
     private final String dbDirectory;
 
@@ -23,7 +24,15 @@ public class CustomFileWriter {
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
             for (List<String> row : table.getRows()) {
-                writer.write(String.join(DELIMITER, row) + ROW_SEPARATOR);
+                
+                // Handle Null values
+                List<String> safeRow = new ArrayList<>();
+                for (String val : row) {
+                    safeRow.add(val==null ? "NULL" : val);
+                }
+
+                writer.write(String.join(DELIMITER, safeRow));
+                writer.write(ROW_SEPARATOR);
             }
             writer.flush();
         }

@@ -1,6 +1,5 @@
 package com.d2db.tools.erd;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -15,8 +14,8 @@ import com.d2db.logging.EventLogger;
 import com.d2db.model.*;;
 
 public class ERDGenerator {
+    
     private static final String ERD_DIR = "D2_DB_Storage/ERD_Exports/";
-
     private final String dbName;
 
     public ERDGenerator(String dbName){

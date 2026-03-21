@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import com.d2db.model.Table;
@@ -27,7 +28,7 @@ public class CustomFileReader {
 
         // Snapshot in memory
         List<String> lines = new ArrayList<>();
-        
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -36,12 +37,64 @@ public class CustomFileReader {
         }
 
         Table table = new Table(tableName);
-        
+
         for (String line : lines) {
-            String[] rowData = line.split(DELIMITER);
-            table.insertRow(Arrays.asList(rowData));
+            
+            List<String> data = parseRow(line);
+            table.insertRow(data);
         }
-        
+
         return table;
+    }
+    
+    // Read file using Iterator to avoid Out of Memory
+    public Iterator<List<String>> streamTableRow(String tableName) throws Exception {
+        File file = new File(dbDirectory + tableName + ".d2db");
+        if (!file.exists()) {
+            throw new Exception("\"FILEREADER EXCEPTION\": File not found");
+        }
+
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+
+        return new Iterator<List<String>>(){
+            String nextLine = fetchNext();
+
+            private String fetchNext() {
+                try {
+                    String line = reader.readLine();
+                    if (line == null) {
+                        reader.close();
+                    }
+                    return line;
+                } catch (Exception e) {
+                    try {
+                        reader.close();
+                    } catch (IOException ex) {
+                    }
+                    throw new RuntimeException("\"FILEREADER EXCEPTION\": Error reading file", e);
+                }
+            }
+            
+            @Override
+            public boolean hasNext(){
+                return nextLine != null;
+            }
+
+            @Override
+            public List<String> next(){
+                String currentLine = nextLine;
+                nextLine = fetchNext();
+
+                return parseRow(currentLine);
+            }
+        };
+    }
+
+    private List<String> parseRow(String line) {
+        if (line == null) {
+            return new ArrayList<>();
+        }
+        String[] rowData = line.split(DELIMITER,-1);
+        return Arrays.asList(rowData);
     }
 }
