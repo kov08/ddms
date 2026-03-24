@@ -18,7 +18,7 @@ public class InsertExecutor implements QueryExecutor {
     private final String tableName;
     private final List<String> values;
     
-    public InsertExecutor(String dbName, String tableName, List<String> values) {
+    public InsertExecutor(String tableName, List<String> values) {
         this.tableName = tableName;
         this.values = values;
     }
@@ -31,9 +31,9 @@ public class InsertExecutor implements QueryExecutor {
             throw new Exception("No database selected. Use 'USE <database_name>;' first.");
         }
         
-        LocalMetadataManager meta = LocalMetadataManager.getInstacne();
+        LocalMetadataManager meta = LocalMetadataManager.getInstance();
         if (!meta.hasLocalTable(tableName)) {
-            throw new Exception("Error: Table '" + tableName + "' does't exist");
+            throw new Exception("Error: Table '" + tableName + "' doesn't exist");
         }
 
         // load existing data
@@ -55,7 +55,7 @@ public class InsertExecutor implements QueryExecutor {
             
             // Network Broadcast (Prevent infinite loop)
             if (!isReplicaSync) {
-                String rawQuery = "INSERT INTO " + tableName;
+                String rawQuery = "INSERT INTO " + tableName + "VALUES (" + String.join(",", values) + ");";
                 VMSyncClient.broadcastCommit("VM2_IP_ADDRESS", 9090, rawQuery);
             }
         }

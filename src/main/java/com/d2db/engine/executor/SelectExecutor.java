@@ -8,6 +8,7 @@ import com.d2db.engine.VMID;
 import com.d2db.engine.parser.QueryExecutor;
 import com.d2db.logging.EventLogger;
 import com.d2db.logging.GeneralLogger;
+import com.d2db.model.ColumnMetadata;
 import com.d2db.model.Table;
 import com.d2db.storage.LocalMetadataManager;
 import com.d2db.transaction.TransactionManager;
@@ -29,9 +30,9 @@ public class SelectExecutor implements QueryExecutor {
     @Override
     public void execute(boolean isReplicaSync) throws Exception {
         long startTime = System.currentTimeMillis();
-        LocalMetadataManager meta = LocalMetadataManager.getInstacne();
+        LocalMetadataManager meta = LocalMetadataManager.getInstance();
         if (!meta.hasLocalTable(tableName)) {
-            throw new Exception("Error table: '" + tableName + "'does not exist.");
+            throw new Exception("Error table: '" + tableName + "' does not exist.");
         }
         EventLogger.getInstance().logEvent("Data fetching: ", "Started", VMID.resolveMachineIdentity());
         
@@ -44,7 +45,17 @@ public class SelectExecutor implements QueryExecutor {
         TransactionManager tmanager = TransactionManager.getInstance();
         Table table = tmanager.getTableContext(dbName, tableName);
 
-        int filterColumnIndex = 0; // placeholder
+        int filterColumnIndex = -1;
+        List<ColumnMetadata> schema = table.getSchema();
+        for (int i = 0; i < schema.size(); i++) {
+            if (schema.get(i).getColumnName().equalsIgnoreCase(whereColumn)) {
+                filterColumnIndex = i;
+                break;
+            }
+        }
+        if (filterColumnIndex == -1) {
+            throw new Exception("\"Unknown column in WHERE: \" + whereColumn");
+        }
 
         List<List<String>> results = new ArrayList<>();
 
@@ -52,6 +63,9 @@ public class SelectExecutor implements QueryExecutor {
             boolean match = true;
 
             if (whereColumn != null && whereValue != null) {
+                if (filterColumnIndex >= row.size()) {
+                    continue;
+                }
                 String cellValue = row.get(filterColumnIndex);
                 if (!cellValue.equals(whereValue)) {
                     match = false;

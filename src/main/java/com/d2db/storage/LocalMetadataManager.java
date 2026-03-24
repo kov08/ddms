@@ -1,5 +1,6 @@
 package com.d2db.storage;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,14 +15,14 @@ public class LocalMetadataManager {
         localTables = new ConcurrentHashMap<>();
     }
 
-    public static synchronized LocalMetadataManager getInstacne() {
+    public static synchronized LocalMetadataManager getInstance() {
         if (instance == null) {
             instance = new LocalMetadataManager();
         }
         return instance;
     }
 
-    public void registarLocalTable(String tableName, String filePath) {
+    public void registerLocalTable(String tableName, String filePath) {
         if (!localTables.containsKey(tableName)) {
             localTables.put(tableName, filePath);
         }
@@ -37,5 +38,19 @@ public class LocalMetadataManager {
             allTableNames.add(tableName);
         }
         return allTableNames;
+    }
+
+    public Map<String, String> loadStateFromDisk(String dbName) {           
+            File dbFolder = new File("D2_DB_Storage/" + dbName);
+            if (dbFolder.exists() && dbFolder.isDirectory()) {
+                for (File file : dbFolder.listFiles()) {
+                    String tableName = file.getName().replace(".d2db", "");
+                    if (!localTables.containsKey(tableName)) {
+                        String filePath = dbFolder + "/" + dbName + ".d2db";
+                        localTables.put(tableName, filePath);
+                    }
+                }
+            }
+            return localTables;
     }
 }

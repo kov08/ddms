@@ -5,7 +5,10 @@ import java.util.List;
 
 import com.d2db.engine.Token;
 import com.d2db.engine.TokenType;
+import com.d2db.engine.executor.CreateTableExecutor;
+import com.d2db.engine.executor.InsertExecutor;
 import com.d2db.engine.executor.SelectExecutor;
+import com.d2db.model.ColumnMetadata;
 
 public class SQLParser {
     private final List<Token> tokens;
@@ -23,26 +26,97 @@ public class SQLParser {
             throw new Exception("Empty Query");
         }
 
-        Token curretnToken = peek();
+        Token currentToken = peek();
 
         // Routing based on keyword
-        if (curretnToken.getTokenType() == TokenType.KEYWORD) {
-            switch (curretnToken.getvalue().toUpperCase()) {
+        if (currentToken.getTokenType() == TokenType.KEYWORD) {
+            switch (currentToken.getvalue().toUpperCase()) {
                 case "CREATE":
-                    // return parseCreate();
+                    return parseCreate();
                 case "INSERT":
-                    // return parseInsert();
+                    return parseInsert();
                 case "SELECT":
                     return parseSelect();
+                case "DELETE":
+                    // return parseDelete();
 
                 default:
-                    throw new Exception("Unexpected SQL Command: " + curretnToken.getvalue());
+                    throw new Exception("Unexpected SQL Command: " + currentToken.getvalue());
             }
         }
         throw new Exception("Invalid SQL Syntax: Query must start with a KEYWORD");
     }
 
-    // parseSelect
+    private QueryExecutor parseCreate() throws Exception {
+        match("CREATE");
+        match("TABLE");
+        String tableName = consume(TokenType.IDENTIFIER).getvalue();
+        match("(");
+
+        List<ColumnMetadata> columnMetadatas = new ArrayList<>();
+
+        while (peek().getTokenType() != TokenType.EOF && !peek().getvalue().equals(")")) {
+            String columnName = consume(TokenType.IDENTIFIER).getvalue();
+            String dataType = consume(TokenType.IDENTIFIER).getvalue();
+
+            ColumnMetadata columnMetadata = new ColumnMetadata(columnName, dataType);
+
+            if (peek().getvalue().equalsIgnoreCase("PRIMARY")) {
+                match("PRIMARY");
+                match("KEY");
+                columnMetadata.setPrimaryKey(true);
+            } else if (peek().getvalue().equalsIgnoreCase("UNIQUE")) {
+                match("UNIQUE");
+                columnMetadata.setUnique(true);
+            }
+
+            columnMetadatas.add(columnMetadata);
+
+            if (peek().getvalue().equals(",")) {
+                match(",");
+            }
+        }
+
+        match(")");
+        match(";");
+
+        return new CreateTableExecutor(tableName, columnMetadatas);
+    }
+    
+    private QueryExecutor parseInsert() throws Exception {
+        match("INSERT");
+        match("INTO");
+        String tableName = consume(TokenType.IDENTIFIER).getvalue();
+        match("VALUES");
+        match("(");
+
+        List<String> values = new ArrayList<>();
+
+        while (peek().getTokenType() != TokenType.EOF && !peek().getvalue().equals(")")) {
+            Token valueToken = advance();
+            String rawValue = valueToken.getvalue();
+
+            if (valueToken.getTokenType() == TokenType.STRING_LITERAL) {
+                rawValue = rawValue.substring(1, rawValue.length() - 1);
+            }
+
+            values.add(rawValue);
+
+            if (peek().getvalue().equals(",")) {
+                match(",");
+            }
+        }
+
+        match(")");
+        match(";");
+
+        return new InsertExecutor(tableName, values);
+    }
+    
+    private QueryExecutor parseDelete() throws Exception {
+        return null;
+    }
+
     private QueryExecutor parseSelect() throws Exception {
         match("SELECT");
         
@@ -70,7 +144,7 @@ public class SQLParser {
             if (valueToken.getTokenType() == TokenType.STRING_LITERAL || valueToken.getTokenType() == TokenType.NUMBER) {
                 whereValue = valueToken.getvalue();
             } else {
-                throw new Exception("Syntex Error: Unexpected literal or number after '='");
+                throw new Exception("Syntax Error: Unexpected literal or number after '='");
             }
         }
 
@@ -99,7 +173,7 @@ public class SQLParser {
         Token token = advance();
         if (!token.getvalue().equalsIgnoreCase(expectedValue)) {
             throw new Exception(
-                    "Syntex Error: Expected Value: '" + expectedValue + "' but found '" + token.getvalue() + "'");
+                    "Syntax Error: Expected Value: '" + expectedValue + "' but found '" + token.getvalue() + "'");
         }
     }
     
@@ -107,7 +181,7 @@ public class SQLParser {
     private Token consume(TokenType expectedType) throws Exception {
         Token token = advance();
         if (token.getTokenType() != expectedType) {
-            throw new Exception("Syntex error: Expected " + expectedType + "but found " + token.getTokenType());
+            throw new Exception("Syntax error: Expected '" + expectedType + "' but found '" + token.getTokenType()+"'");
         }
         return token;
     }

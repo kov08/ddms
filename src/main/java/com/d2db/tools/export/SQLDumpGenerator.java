@@ -87,7 +87,7 @@ public class SQLDumpGenerator {
 
         for (int i = 0; i < schema.size(); i++) {
             ColumnMetadata column = schema.get(i);
-            String columnDef = "   " + column.getColumnName() + "   " + column.getdataType();
+            String columnDef = "   " + column.getColumnName() + "   " + column.getDataType();
 
             if (column.isUnique() && !column.isPrimaryKey()) {
                 columnDef += " UNIQUE ";
@@ -118,7 +118,7 @@ public class SQLDumpGenerator {
         }
     }
 
-    // Load and write entire table
+    // Load and write entire table ( we use stream to prevent out of memory problem)
     private void writeTableData(BufferedWriter writer, Table table, String tableName) throws IOException {
         writer.write("Table Name: " + tableName);
         List<List<String>> rows = table.getRows();
@@ -132,7 +132,7 @@ public class SQLDumpGenerator {
             StringBuilder insertStatement = new StringBuilder();
             for (int i = 0; i < row.size(); i++) {
                 String value = row.get(i);
-                String dataType = schema.get(i).getdataType().toUpperCase();
+                String dataType = schema.get(i).getDataType().toUpperCase();
 
                 insertStatement.append(formatValue(value, dataType));
                 if (i < row.size() - 1) {
@@ -164,7 +164,7 @@ public class SQLDumpGenerator {
 
             for (int i = 0; i < row.size(); i++) {
                 String val = row.get(i);
-                String dataType = schema.get(i).getdataType().toUpperCase();
+                String dataType = schema.get(i).getDataType().toUpperCase();
 
                 insertStatement.append(formatValue(val, dataType));
 

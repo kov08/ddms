@@ -31,10 +31,12 @@ public class TransactionManager {
             while (true) {
                 try {
                     Thread.sleep(5000);
-                    if (isTrasactionActive && (System.currentTimeMillis() - transactionStartTime > TIMEOUT_MS)) {
-                        System.out.println("TIMEOUT: Forcefully rolling back abandoned transaction.");
-                        rollbackTransaction();
-                    }
+                    // if (isTrasactionActive && (System.currentTimeMillis() - transactionStartTime > TIMEOUT_MS)) {
+                    //     System.out.println("TIMEOUT: Forcefully rolling back abandoned transaction.");
+                    //     rollbackTransaction();
+                    // }
+                    System.out.println(" tRANSACTION dONE!");
+                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

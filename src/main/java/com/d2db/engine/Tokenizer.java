@@ -31,11 +31,11 @@ public class Tokenizer {
         Matcher matcher = TOKEN_PATTERN.matcher(input);
 
         while (matcher.find()) {
-            if (matcher.group("kEYWORD") != null) {
+            if (matcher.group("KEYWORD") != null) {
                 tokens.add(new Token(TokenType.KEYWORD, matcher.group("KEYWORD").toUpperCase()));
             } else if (matcher.group("STRING") != null) {
                 String literal = matcher.group("STRING");
-                tokens.add(new Token(TokenType.STRING_LITERAL, literal.substring(1, literal.length() - 1)));
+                tokens.add(new Token(TokenType.STRING_LITERAL, literal.substring(0, literal.length())));
             } else if (matcher.group("NUMBER") != null) {
                 tokens.add(new Token(TokenType.NUMBER, matcher.group("NUMBER")));
             } else if (matcher.group("IDENTIFIER") != null) {

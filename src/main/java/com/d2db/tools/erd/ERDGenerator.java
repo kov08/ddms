@@ -31,7 +31,7 @@ public class ERDGenerator {
     }
 
     public void generateTextERD() throws Exception {
-        LocalMetadataManager meta = LocalMetadataManager.getInstacne();
+        LocalMetadataManager meta = LocalMetadataManager.getInstance();
         CustomFileReader reader = new CustomFileReader(dbName);
         File erdFile = new File(ERD_DIR + dbName + "_ERD.txt");
 
@@ -76,7 +76,7 @@ public class ERDGenerator {
             for (ColumnMetadata column : table.getSchema()) {
                 String keyMarker = determineKeyMarker(column);
                 writer.write(keyMarker + " Column Name: " + column.getColumnName() + " Column datatype: "
-                        + column.getdataType() + "\n");
+                        + column.getDataType() + "\n");
             }
             writer.write("--------------------------------\n");
         }

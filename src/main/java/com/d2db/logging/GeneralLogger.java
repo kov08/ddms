@@ -33,7 +33,7 @@ public class GeneralLogger extends LogManager {
     // Save the current state(size) of tables in database
     public void logDatabaseState(String dbName, String vmId) {
         String timeStamp = Instant.now().toString();
-        LocalMetadataManager meta = LocalMetadataManager.getInstacne(); 
+        LocalMetadataManager meta = LocalMetadataManager.getInstance(); 
         CustomFileReader reader = new CustomFileReader(dbName);
 
         StringBuilder stateBuilder = new StringBuilder();

@@ -17,6 +17,17 @@ public class Table {
         this.rows = new LinkedList<>();
         this.index = new Trie();
     }
+
+    public Table(String tableName, List<ColumnMetadata> schema) {
+        this.tableName = tableName;
+        this.schema = schema;
+        this.rows = new LinkedList<>();
+        this.index = new Trie();
+    }
+
+    public void addColumnMetadata(ColumnMetadata columnMetadata) {
+        schema.add(columnMetadata);
+    }
     
     public void addColumn(String columnName, String dataType) {
         schema.add(new ColumnMetadata(columnName, dataType));

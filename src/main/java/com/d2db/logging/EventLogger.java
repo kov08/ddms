@@ -2,6 +2,8 @@ package com.d2db.logging;
 
 import java.time.Instant;
 
+import com.d2db.engine.VMID;
+
 public class EventLogger extends LogManager {
     private static EventLogger instance;
     
@@ -18,9 +20,10 @@ public class EventLogger extends LogManager {
 
     public void logEvent(String eventType, String details, String vmID) {
         String timeStamp = Instant.now().toString();
+        vmID = VMID.resolveMachineIdentity();
 
         String jsonPayload = String.format(
-                "{\"timestamp\":\"%s\", \'eventType\":\"%s\",\"details\":\"%s\",\"vmID\":\"%s\"}", timeStamp, eventType,
+                "{\"timestamp\":\"%s\", \"eventType\":\"%s\" ,\"details\":\"%s\" ,\"vmID\":\"%s\"}", timeStamp, eventType,
                 details, vmID);
                 
                 appendLog("EventLog.json", jsonPayload);

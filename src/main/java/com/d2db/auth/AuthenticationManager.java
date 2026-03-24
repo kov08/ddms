@@ -28,6 +28,7 @@ public class AuthenticationManager {
         initializeDirectory();
         this.userCache = new ConcurrentHashMap<>();
         loadUsersIntoCache();
+        System.out.println("LoadUSer into cache executed");
     }
 
     public static synchronized AuthenticationManager getInstance() {
@@ -60,7 +61,7 @@ public class AuthenticationManager {
         String hashedPassword = hashData(password);
         String profileLine = userName + " | " + hashedPassword;
         appendUserToFile(profileLine);
-        userCache.put(userName, hashedPassword);
+        userCache.put(userName.trim(), hashedPassword.trim());
         
         // if (!isReplicaSync) {
         //     String payLoad = "REGISTER USER " + profileLine;
@@ -78,6 +79,11 @@ public class AuthenticationManager {
         }
 
         if (!userCache.containsKey(userName)) {
+            for (String iterable_element : userCache.keySet()) {
+                System.out.println(iterable_element);
+                if (iterable_element.trim().equals(userName))
+                    return true;
+            }
             return false;
         }
         
@@ -131,7 +137,7 @@ public class AuthenticationManager {
             while ((line = reader.readLine())!= null) {
                 String[] user = line.split("\\|");
                 if (user.length >= 2) {
-                    userCache.put(user[0], user[1]);
+                    userCache.put(user[0].trim(), user[1].trim());
                 }
             }
 

@@ -39,7 +39,7 @@ public class ColumnMetadata{
         return columnName;
     }
 
-    public String getdataType() {
+    public String getDataType() {
         return dataType;
     }
     

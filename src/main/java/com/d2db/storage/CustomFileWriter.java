@@ -10,7 +10,7 @@ import java.util.List;
 import com.d2db.model.Table;
 
 public class CustomFileWriter {
-    private static final String DELIMITER= "\\|#\\|";
+    private static final String DELIMITER= "|#|";
     private static final String ROW_SEPARATOR = System.lineSeparator();
     private final String dbDirectory;
 
